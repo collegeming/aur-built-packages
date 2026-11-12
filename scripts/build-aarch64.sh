@@ -165,10 +165,13 @@ fi
 [ -f /stage/usr/lib/mark-shot/libmark-shot-layer-shell.so ] \
     || { echo "::error::layer-shell plugin was not built" >&2; exit 1; }
 
-# Soname-pinned FFmpeg deps, derived from the binary actually produced, so
+# Soname-pinned FFmpeg deps, derived from the binaries actually produced, so
 # pacman refuses the package on an FFmpeg generation mismatch instead of
-# letting it break at runtime.
-SONAMES=$(ldd /stage/usr/bin/mark-shot 2>/dev/null | grep -oE 'lib(av|sw)[a-z]+\.so\.[0-9]+' | sort -u || true)
+# letting it break at runtime. The main binary does not link FFmpeg itself --
+# the recording backend plugin does, so both have to be inspected.
+SONAMES=$( { ldd /stage/usr/bin/mark-shot
+             for so in /stage/usr/lib/mark-shot/recording/*.so; do ldd "$so"; done
+           } 2>/dev/null | grep -oE 'lib(av|sw)[a-z]+\.so\.[0-9]+' | sort -u || true)
 echo "==> linked ffmpeg sonames: ${SONAMES:-none}"
 
 {
