@@ -111,9 +111,13 @@ jobs:
         run: |
           set -euo pipefail
           TAG="aur-built-latest"
-          if ! gh release view "$TAG" >/dev/null 2>&1; then
-            gh release create "$TAG" --title "Built packages (rolling)" \
+          # --repo everywhere: this job has no checkout, so gh cannot infer the
+          # repository from a git remote ("fatal: not a git repository").
+          if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" \
+              --title "Built packages (rolling)" \
               --notes "Pacman packages built from jswysnemc/mark-shot releases. Consumed by the AUR package mark-shot-arch-bin."
           fi
-          gh release upload "$TAG" dist/* --clobber
-          gh release view "$TAG" --json assets --jq '.assets[] | "  \(.name) (\(.size) bytes)"'
+          gh release upload "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --clobber
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets \
+            --jq '.assets[] | "  \(.name) (\(.size) bytes)"'
