@@ -160,11 +160,29 @@ echo "==> building inside ALARM chroot (native arm64, minutes not hours)"
 for d in proc dev sys; do
     sudo mount --bind "/$d" "$ROOTDIR/$d"
 done
-sudo cp /etc/resolv.conf "$ROOTDIR/etc/resolv.conf"
+
+# DNS: the rootfs ships /etc/resolv.conf as a symlink into /run, and a plain cp
+# through it can land somewhere the chroot never reads, which shows up later as
+# "Could not resolve host: mirror.archlinuxarm.org". Replace it with a real file.
+# The host's loopback stub (127.0.0.53) is useless inside the chroot, so keep
+# only routable nameservers and add the Azure platform resolver as a fallback.
+sudo rm -f "$ROOTDIR/etc/resolv.conf"
+NS="$(awk '/^nameserver/{print $2}' /etc/resolv.conf | grep -vE '^(127\.|::1$)' | head -3 || true)"
+{
+    printf '%s\n' "$NS"
+    echo "168.63.129.16"
+    echo "1.1.1.1"
+} | sudo tee "$ROOTDIR/etc/resolv.conf" >/dev/null
+echo "==> chroot resolv.conf:"
+sudo cat "$ROOTDIR/etc/resolv.conf"
 
 # `|| RC=$?` keeps set -e from exiting before the bind mounts are undone.
 RC=0
-sudo chroot "$ROOTDIR" /bin/bash /root/inner.sh || RC=$?
+sudo chroot "$ROOTDIR" /bin/bash -c 'getent hosts mirror.archlinuxarm.org' \
+    || { RC=$?; echo "::error::DNS does not resolve inside the chroot" >&2; }
+if [ "$RC" -eq 0 ]; then
+    sudo chroot "$ROOTDIR" /bin/bash /root/inner.sh || RC=$?
+fi
 
 for d in sys dev proc; do
     sudo umount "$ROOTDIR/$d" 2>/dev/null || true
