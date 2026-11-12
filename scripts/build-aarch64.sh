@@ -29,10 +29,25 @@ req = urllib.request.Request(
 tok = os.environ.get("GITHUB_TOKEN")
 if tok:
     req.add_header("Authorization", f"Bearer {tok}")
-rels = json.load(urllib.request.urlopen(req, timeout=60))
+print(f"resolve: repo={repo} token={'set' if tok else 'UNSET'}", file=sys.stderr)
+try:
+    with urllib.request.urlopen(req, timeout=60) as resp:
+        status = resp.status
+        body = resp.read().decode()
+except urllib.error.HTTPError as e:
+    print(f"resolve: HTTP {e.code}: {e.read().decode()[:200]}", file=sys.stderr); sys.exit(1)
+except Exception as e:
+    print(f"resolve: network error: {e}", file=sys.stderr); sys.exit(1)
+rels = json.loads(body)
+print(f"resolve: HTTP {status}, got {len(rels)} releases, first: {[x['tag_name'] for x in rels[:5]]}",
+      file=sys.stderr)
+tag = None
 for r in rels:
     if not r.get("draft") and not r.get("prerelease"):
-        print(r["tag_name"]); break
+        tag = r["tag_name"]; break
+if not tag:
+    print(f"resolve: NO STABLE RELEASE among {len(rels)}; cannot build", file=sys.stderr); sys.exit(1)
+print(tag)
 PY
     ); then
         echo "::error::could not resolve the upstream version; see the error above" >&2
