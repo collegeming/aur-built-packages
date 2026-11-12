@@ -92,7 +92,8 @@ run_as_builder '
 cmake -S src -B build -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/usr \
-    -DMARK_SHOT_REQUIRE_FFMPEG=ON
+    -DMARK_SHOT_REQUIRE_FFMPEG=ON \
+    -DMARK_SHOT_REQUIRE_LAYER_SHELL=ON
 cmake --build build --parallel
 cmake --install build --prefix stage/usr
 '

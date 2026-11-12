@@ -109,7 +109,8 @@ cd /root/src
 cmake -S . -B build -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/usr \
-    -DMARK_SHOT_REQUIRE_FFMPEG=ON
+    -DMARK_SHOT_REQUIRE_FFMPEG=ON \
+    -DMARK_SHOT_REQUIRE_LAYER_SHELL=ON
 cmake --build build --parallel
 cmake --install build --prefix /root/stage/usr
 
@@ -134,7 +135,7 @@ echo "==> linked ffmpeg sonames: \${SONAMES:-none}"
     echo "size = \$(du -sb /root/stage/usr | cut -f1)"
     echo "arch = aarch64"
     echo "license = MIT"
-    for d in qt6-base qt6-svg qt6-wayland pipewire grim wl-clipboard hicolor-icon-theme python; do
+    for d in qt6-base qt6-svg qt6-wayland layer-shell-qt pipewire grim wl-clipboard hicolor-icon-theme python; do
         echo "depend = \$d"
     done
     while IFS= read -r so; do
