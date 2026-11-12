@@ -53,7 +53,8 @@ PY
         echo "::error::could not resolve the upstream version; see the error above" >&2
         exit 1
     fi
-    MARK_SHOT_TAG=$(printf '%s' "$RESOLVED" | python3 -c 'import json,sys; print(json.load(sys.stdin)["tag"])')
+    # resolve prints the bare tag (diagnostics go to stderr) -- no JSON here.
+    MARK_SHOT_TAG="$RESOLVED"
 fi
 
 TAG="$MARK_SHOT_TAG"
