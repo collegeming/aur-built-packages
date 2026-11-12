@@ -15,6 +15,7 @@ PKGNAME="mark-shot-arch-bin"
 UPSTREAM_REPO="jswysnemc/mark-shot"
 OUT_DIR="${GITHUB_WORKSPACE:-$(pwd)}/dist"
 ROOTDIR="$(pwd)/alarm-rootfs"
+ROOTFS_URL="http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz"
 
 # --------------------------------------------------------------------------- #
 # Resolve the newest stable upstream tag
