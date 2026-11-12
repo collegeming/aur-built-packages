@@ -79,8 +79,12 @@ echo "==> rootfs ready"
 # --------------------------------------------------------------------------- #
 # Stage sources + inner build script, then chroot in
 # --------------------------------------------------------------------------- #
-rm -rf "$ROOTDIR/root/src" "$ROOTDIR/root/stage" "$ROOTDIR/out"
+# /root inside the extracted rootfs is root-owned (mode 700), so the runner
+# user cannot even traverse it: everything here needs sudo.
+sudo rm -rf "$ROOTDIR/root/src" "$ROOTDIR/root/stage" "$ROOTDIR/out"
 sudo mkdir -p "$ROOTDIR/root/src" "$ROOTDIR/root/stage" "$ROOTDIR/out"
+# Bind-mount targets must exist in the rootfs before mount(2) is called.
+sudo mkdir -p "$ROOTDIR/proc" "$ROOTDIR/dev" "$ROOTDIR/sys"
 sudo git clone --depth 1 --branch "$TAG" \
     "https://github.com/${UPSTREAM_REPO}.git" "$ROOTDIR/root/src"
 
